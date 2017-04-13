@@ -9,8 +9,8 @@
 #include <pthread.h>
 
 typedef struct {
-    bool flag[2];
-    int victim;
+    volatile bool flag[2];
+    volatile int victim;
 } peterson_lock_t;
 
 void peterson_lock_init(peterson_lock_t &lock) {
