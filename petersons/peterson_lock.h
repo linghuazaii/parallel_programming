@@ -9,8 +9,8 @@
 #include <pthread.h>
 
 typedef struct {
-    bool flag[2];
-    bool victim;
+    volatile bool flag[2];
+    volatile int victim;
 } peterson_lock_t;
 
 void peterson_lock_init(peterson_lock_t &lock) {
@@ -22,7 +22,7 @@ void peterson_lock(peterson_lock_t &lock, int id) {
     lock.victim = id;
     lock.flag[id] = true;
     asm volatile ("mfence" : : : "memory");
-    while (lock.flag[1 - id] == false && lock.victim != id);
+    while (lock.flag[1 - id] && lock.victim == id);
 }
 
 void peterson_unlock(peterson_lock_t &lock, int id) {
