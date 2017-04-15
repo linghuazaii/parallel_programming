@@ -19,8 +19,8 @@ void peterson_lock_init(peterson_lock_t &lock) {
 }
 
 void peterson_lock(peterson_lock_t &lock, int id) {
-    lock.victim = id;
     lock.flag[id] = true;
+    lock.victim = id;
     asm volatile ("mfence" : : : "memory");
     while (lock.flag[1 - id] && lock.victim == id);
 }
