@@ -7,6 +7,7 @@
  */
 #include "servant.h"
 #include "method_request.h"
+#include "message.h"
 
 class Producer : public MethodRequest {
 public:
@@ -16,6 +17,9 @@ public:
     }
     virtual bool guard() {
         return !servant_->full();
+    }
+    virtual void call() {
+        servant_->produce(msg_);
     }
 private:
     Servant *servant_;

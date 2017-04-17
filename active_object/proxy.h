@@ -7,6 +7,11 @@
  */
 #include "servant.h"
 #include "method_request.h"
+#include "message.h"
+#include "message_future.h"
+#include "scheduler.h"
+#include "producer.h"
+#include "consumer.h"
 
 class Proxy {
 public:
@@ -14,13 +19,18 @@ public:
     Proxy(size_t size = MAX_SIZE) {
         scheduler_ = new Scheduler(size);
         servant_ = new Servant(size);
+        scheduler_->run();
     }
-    void produce(const Message &msg) {
+    ~Proxy() {
+        delete scheduler_;
+        delete servant_;
+    }
+    void produce(Message &msg) {
         MethodRequest *method_request = new Producer(servant_, msg);
         scheduler_->enqueue(method_request);
     }
-    void consume() {
-        MessageFuture result;
+    MessageFuture * consume() {
+        MessageFuture *result = new MessageFuture;
         MethodRequest *method_request = new Consumer(servant_, result);
         scheduler_->enqueue(method_request);
         return result;

@@ -1,56 +1,52 @@
 /* This file is auto-generated.Edit it at your own peril.*/
-#include <iostream>
-#include <string>
 #include <stdio.h>
-#include <cstring>
 #include <unistd.h>
-#include <cstdlib>
-#include <vector>
-#include <set>
-#include <map>
-#include <termios.h>
-#include <inttypes.h>
-#include <errno.h>
-#include <algorithm>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/uio.h>
-#include <sys/mman.h>
-#include <sched.h>
-#include <malloc.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netinet/tcp.h>
-#include "lock.h"
+#include "proxy.h"
 #include <pthread.h>
-using namespace std;
+#include <time.h>
 
-Lock lock;
+Proxy *proxy = NULL;
 
-void *routine(void *arg) {
-    int ret = lock.timedlock(999);
-    if (ret == 1)
-        cout<< "timeout" <<endl;
-    else if (ret == 0)
-        cout<<"locked"<<endl;
-    else
-        cout<<"error"<<endl;
-    lock.unlock();
+void *producer_routine(void *arg) {
+    printf("Producer Routine\n");
+    char msg_buffer[256];
+    for (int i = 0; i < 10; ++i) {
+        sleep(1);
+        sprintf(msg_buffer, "I am Producer (time => %ld)\n", time(0));
+        Message msg = Message(msg_buffer);
+        proxy->produce(msg);
+    }
+
+    return NULL;
+}
+
+void *consumer_routine(void *arg) {
+    printf("Consumer Routine\n");
+    while (true) {
+        MessageFuture *result = proxy->consume();
+        sleep(1); // wait future has result
+        if (result->hasMessage()) {
+            Message msg = result->getMessage();
+            printf("Consume Message => %s", msg.c_str());
+        }
+    }
 
     return NULL;
 }
 
 int main(int argc, char **argv) {
-    lock.lock();
-    pthread_t thread;
-    pthread_create(&thread, NULL, routine, NULL);
-    sleep(1);
-    lock.unlock();
+    proxy = new Proxy();
 
-    pthread_join(thread, NULL);
+    pthread_t producer1, producer2, consumer;
+    pthread_create(&producer1, NULL, producer_routine, NULL);
+    pthread_create(&producer2, NULL, producer_routine, NULL);
+    pthread_create(&consumer, NULL, consumer_routine, NULL);
+    
+    pthread_join(producer1, NULL);
+    pthread_join(producer2, NULL);
+    pthread_join(consumer, NULL);
+
+    delete proxy;
 
     return 0;
 }

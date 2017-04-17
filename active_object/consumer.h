@@ -7,22 +7,24 @@
  */
 #include "servant.h"
 #include "method_request.h"
+#include "message.h"
+#include "message_future.h"
 
 class Consumer : public MethodRequest {
 public:
-    Consumer(Servant *servant, Message &msg) {
+    Consumer(Servant *servant, MessageFuture *future) {
         servant_ = servant;
-        msg_ = msg;
+        future_ = future;
     }
     virtual bool guard() {
         return !servant_->empty();
     }
     virtual void call() {
-        result_ = servant_->consume();
+        servant_->consume(future_);
     }
 private:
     Servant *servant_;
-    MessageFuture result_;
+    MessageFuture *future_;
 };
 
 #endif

@@ -6,18 +6,20 @@
  * Mailto: charlesliu.cn.bj@gmain.com
  */
 #include <queue>
+#include "message.h"
+#include "message_future.h"
 using std::queue;
 
 class Servant {
 public:
     Servant(size_t mq_size) : size(mq_size) {}
     void produce(const Message &msg) {
-        mq.push_back(msg);
+        mq.push(msg);
     }
-    Message consume() {
+    void consume(MessageFuture *future) {
         Message msg = mq.front();
-        mq.pop_front();
-        return msg;
+        mq.pop();
+        future->setMessage(msg);
     }
     bool empty() {
         return (mq.size() == 0);

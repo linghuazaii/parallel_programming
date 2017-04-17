@@ -10,6 +10,6 @@ class MethodRequest {
 public:
     virtual bool guard() = 0;
     virtual void call() = 0;
-}
+};
 
 #endif
